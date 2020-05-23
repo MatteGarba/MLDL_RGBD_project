@@ -10,6 +10,10 @@ The present python script contains the following classes:
 """
 
 class Pre_text(nn.Module):
+  """
+  Pretext task
+  
+  """
   def __init__(self, num_classes = 4, featureMaps = 512, **kwargs):
     super(Pre_text, self).__init__():
       self.layer = nn.sequential(
@@ -23,5 +27,24 @@ class Pre_text(nn.Module):
             nn.Softmax(100),
             nn.Linear(100, num_classes),
       )
+      
+class  Main_task(nn.Module):
+  """
+  Main classifier
+  """
+  def__init__(self, num_classes = 51, featureMaps = 512, **kwargs):
+    super(Main_task, self).__init__():
+      self.layer = nn.Sequential(
+            nn.AdaptiveAvgPool2d((7,7)),
+            nn.Linear(input_size, 1000),
+            nn.BatchNorm2d(1000),
+            nn.ReLU(inplace=True),
+            nn.Linear(1000, num_classes),
+            nn.Softmax(),
+        )
+  
+  def forward(self, h):
+     d = self.layer(h)
+     return d
  
       
