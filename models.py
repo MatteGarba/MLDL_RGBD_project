@@ -27,6 +27,9 @@ class PreText(nn.Module):
             nn.Softmax(100),
             nn.Linear(100, num_classes),
       )
+  def forward(self, h):
+    c = self.layer(h)
+    return c    
       
 class  MainTask(nn.Module):
   """
