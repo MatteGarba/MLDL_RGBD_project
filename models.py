@@ -35,7 +35,7 @@ class  MainTask(nn.Module):
   """
   Main classifier
   """
-  def__init__(self, num_classes = 51, featureMaps = 512, **kwargs):
+  def __init__(self, num_classes = 51, featureMaps = 512, **kwargs):
     super(MainTask, self).__init__():
       self.layer = nn.Sequential(
             nn.AdaptiveAvgPool2d((7,7)),
