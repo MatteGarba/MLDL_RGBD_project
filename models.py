@@ -17,7 +17,7 @@ class PreText(nn.Module):
   def __init__(self, num_classes = 4, featureMaps = 512, **kwargs):
     super(PreText, self).__init__():
       self.layer = nn.sequential(
-            nn.Conv2d(featureMaps, 100, kernel_size = 1),
+            nn.Conv2d(featureMaps*2, 100, kernel_size = 1),
             nn.BatchNorm2d(100),
             nn.ReLU(inplace=True),
             nn.Conv2d(100, 100, kernel_size = 3),
@@ -39,7 +39,7 @@ class  MainTask(nn.Module):
     super(MainTask, self).__init__():
       self.layer = nn.Sequential(
             nn.AdaptiveAvgPool2d((7,7)),
-            nn.Linear(input_size, 1000),
+            nn.Linear(featureMaps*2, 1000),
             nn.BatchNorm2d(1000),
             nn.ReLU(inplace=True),
             nn.Linear(1000, num_classes),
