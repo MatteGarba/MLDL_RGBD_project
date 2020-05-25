@@ -16,17 +16,17 @@ class PreText(nn.Module):
 
   """
   def __init__(self, num_classes = 4, featureMaps = 512, **kwargs):
-    super(PreText, self).__init__():
-      self.layer = nn.sequential(
-            nn.Conv2d(featureMaps*2, 100, kernel_size = 1),
-            nn.BatchNorm2d(100),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(100, 100, kernel_size = 3),
-            nn.BatchNorm2d(100),
-            nn.ReLU(inplace=True),
-            nn.Linear(100, 100),
-            nn.Softmax(100),
-            nn.Linear(100, num_classes),
+    super(PreText, self).__init__()
+    self.layer = nn.sequential(
+          nn.Conv2d(featureMaps*2, 100, kernel_size = 1),
+          nn.BatchNorm2d(100),
+          nn.ReLU(inplace=True),
+          nn.Conv2d(100, 100, kernel_size = 3),
+          nn.BatchNorm2d(100),
+          nn.ReLU(inplace=True),
+          nn.Linear(100, 100),
+          nn.Softmax(100),
+          nn.Linear(100, num_classes),
       )
   def forward(self, h):
     c = self.layer(h)
@@ -37,14 +37,14 @@ class  MainTask(nn.Module):
   Main classifier
   """
   def __init__(self, num_classes = 51, featureMaps = 512, **kwargs):
-    super(MainTask, self).__init__():
-      self.layer = nn.Sequential(
-            nn.AdaptiveAvgPool2d((7,7)),
-            nn.Linear(featureMaps*2, 1000),
-            nn.BatchNorm2d(1000),
-            nn.ReLU(inplace=True),
-            nn.Linear(1000, num_classes),
-            nn.Softmax(),
+    super(MainTask, self).__init__()
+    self.layer = nn.Sequential(
+          nn.AdaptiveAvgPool2d((7,7)),
+          nn.Linear(featureMaps*2, 1000),
+          nn.BatchNorm2d(1000),
+          nn.ReLU(inplace=True),
+          nn.Linear(1000, num_classes),
+          nn.Softmax(),
         )
 
   def forward(self, h):
