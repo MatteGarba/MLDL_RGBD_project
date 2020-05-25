@@ -55,6 +55,7 @@ class  MainTask(nn.Module):
 
 class Branch(nn.Module):
     """
+    This class is for the branches that make the FeatureExtractor.
     Source code for resnet18: https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py
     Resnet paper: https://arxiv.org/pdf/1512.03385.pdf
     """
@@ -91,3 +92,26 @@ class Branch(nn.Module):
         conv5 is made of 2 conv. layers that apply 512 filters each, and give 7x7 outputs for each filter and for each image
         """
         return x
+
+
+class FeatureExtractor(nn.Module):
+
+    def __init__(self, pretrained=True):
+        super(FeatureExtractor, self).__init__()
+        self.rgb_branch = Branch(pretrained=pretrained)
+        self.depth_branch = Branch(pretrained=pretrained)
+
+    def _combine_features(self, rgb_out, depth_out):
+        """
+        Note that len(rgb_out)==len(depth_out).
+        @Returns: 4-dimensional tensor of size [len(rgb_out), 1024, 7, 7]   (is this what we mean with "combine along the channel dimension"?)
+        """
+        return torch.cat([rgb_out, depth_out], dim=1)
+
+    def forward(self, rgb_batch, depth_batch):
+        # Forward pass in both branches
+        rgb_features = self.rgb_branch(rgb_batch)
+        depth_features = self.depth_branch(depth_batch)
+
+        # Combine the outputs of the two branches to make the final features.
+        return self._combine_features(rgb_features, depth_features)
