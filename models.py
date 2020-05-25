@@ -1,4 +1,5 @@
 import torch.nn as nn
+from torchvision.models import resnet18
 
 """
 The present python script contains the following classes:
@@ -12,7 +13,7 @@ The present python script contains the following classes:
 class PreText(nn.Module):
   """
   Pretext task
-  
+
   """
   def __init__(self, num_classes = 4, featureMaps = 512, **kwargs):
     super(PreText, self).__init__():
@@ -29,8 +30,8 @@ class PreText(nn.Module):
       )
   def forward(self, h):
     c = self.layer(h)
-    return c    
-      
+    return c
+
 class  MainTask(nn.Module):
   """
   Main classifier
@@ -45,9 +46,48 @@ class  MainTask(nn.Module):
             nn.Linear(1000, num_classes),
             nn.Softmax(),
         )
-  
+
   def forward(self, h):
      d = self.layer(h)
      return d
- 
-      
+
+
+
+class Branch(nn.Module):
+    """
+    Source code for resnet18: https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py
+    Resnet paper: https://arxiv.org/pdf/1512.03385.pdf
+    """
+    def __init__(self, pretrained=True):
+        super(Branch, self).__init__()
+        net = resnet18(pretrained=pretrained, progress=True)
+        self.conv1 = net.conv1
+        self.bn1 = net.bn1
+        self.relu = net.relu
+        self.maxpool = net.maxpool
+
+        self.conv2 = net.layer1
+        self.conv3 = net.layer2
+        self.conv4 = net.layer3
+        self.conv5 = net.layer4
+
+
+    def forward(self, x):
+        """
+        x: input data. 4-dimensional tensor
+        @Returns: 4-dimensional tensor of size [len(x), 512, 7, 7]
+        """
+        # the residual part is implemented in the BasicBlock class that composes layers layer1..4
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+        x = self.maxpool(x)
+
+        x = self.conv2(x)
+        x = self.conv3(x)
+        x = self.conv4(x)
+        x = self.conv5(x)
+        """
+        conv5 is made of 2 conv. layers that apply 512 filters each, and give 7x7 outputs for each filter and for each image
+        """
+        return x
