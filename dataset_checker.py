@@ -1,6 +1,6 @@
 import sys, os
 
-class dataset_checker():
+class Dataset_checker():
 
   def check(self, path_rgb, path_depth):
 
