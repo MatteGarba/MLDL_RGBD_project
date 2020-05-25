@@ -6,7 +6,7 @@ class Dataset_checker():
 
     # Robustness checks
     if not os.path.isdir(path_rgb) or not os.path.isdir(path_depth):
-      return -1
+      sys.exit(-1)
 
     folders = os.listdir(path_rgb) # just one list, sice there are the same folders in both rgb and 
     nopng = 0 # counts how many non .png files are found
@@ -49,14 +49,14 @@ class Dataset_checker():
     else:
       print("\nCheck complete --> errors found")
     
-    return 0
+    return
 
 
   def fix(self, path_rgb, path_depth):
 
     # Robustness checks
     if not os.path.isdir(path_rgb) or not os.path.isdir(path_depth):
-      return -1
+      sys.exit(-1)
 
     folders = os.listdir(path_rgb) # just one list, sice there are the same folders in both rgb and 
 
@@ -92,4 +92,4 @@ class Dataset_checker():
           cnt_corrected = cnt_corrected + 1
     print(f"Removed {cnt_corrected} images")
 
-    return 0
+    return
