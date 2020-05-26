@@ -18,7 +18,7 @@ def Make_rotation(image):
   
 class Rotate(VisionDataset):
     def __init__(self, dataset,  transform=None):
-        super(Caltech, self).__init__(dataset)
+        super(Rotate, self).__init__(dataset)
         self.dataset = dataset
         self.wrapper = []
 
