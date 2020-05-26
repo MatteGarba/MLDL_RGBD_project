@@ -1,10 +1,8 @@
 import sys, os
 from torchvision.datasets import VisionDataset
-from PIL import Image
 import numpy as np
 from random import randint
 import torch
-from torchvision import transforms
 
 
 
@@ -32,6 +30,7 @@ class Rotate(VisionDataset):
           #print(img.shape)
           rotated, label = Make_rotation(img)
           self.wrapper.append((torch.Tensor(rotated),label))
+        print('finish')
           
     
     def __getitem__(self, index):
@@ -44,12 +43,8 @@ class Rotate(VisionDataset):
         '''
         image, label = self.wrapper[index]
                            # Provide a way to access image and label via index
-                           # Image should be a PIL Image but actually is a tensor
+                           # Image is actually a tensor
                            # label can be int
-        image = transforms.ToPILImage()(image).convert("RGB")
-        # Applies preprocessing when accessing the image
-        if self.transform is not None:
-            image = self.transform(image)
 
         return image, label   
       
