@@ -3,6 +3,8 @@ from torchvision.datasets import VisionDataset
 from PIL import Image
 import numpy as np
 from random import randint
+import torch
+from torchvision import transforms
 
 
 
@@ -22,8 +24,8 @@ class Rotate(VisionDataset):
         self.dataset = dataset
         self.wrapper = []
 
-        for i in range(len(data_synRODrgb)):
-          image = data_synRODrgb[i][0]
+        for i in range(len(dataset)):
+          image = dataset[i][0]
           img = torchvision.utils.make_grid(image)
           #print(img.shape)
           img = img.numpy().transpose((1, 2, 0))
