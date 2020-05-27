@@ -1,13 +1,15 @@
-import sys, os
 from torchvision.datasets import VisionDataset
 import numpy as np
 from random import randint
 import torch
 
+'''
+The present class to bring together the rgb and depth images in a unique set (RGB_image, Depth_image) con label.
+They can be o no rotated depending on the value of the flag "flag_rotate".
+* if flag_rotate == true, images are rotated and label represent the groudtruth for the relative rotation
+* Otherwise, they are not rotated and the label identifies the class of the object in the images (which is the same for  both the modalities)
 
-
-##Another class which gives us and object of type Dataset containing rotated images
-  
+'''
 def Make_rotation(image):
    val = randint(0, 3)
 
@@ -15,43 +17,43 @@ def Make_rotation(image):
    rotated = np.rot90(image, val)
    return np.array(rotated).transpose((2, 1, 0)), val
 
-  
-class Rotate(VisionDataset):
-    def __init__(self, dataset,  transform=None):
-        super(Rotate, self).__init__(dataset)
-        self.dataset = dataset
-        self.wrapper = []
+class DualDataset(VisionDataset):
+    def __init__(self, rgb_dataset, depth_dataset, flag_rotate = False):
+        super(DualDataset, self).__init__(rgb_dataset)
+        if len(rgb_dataset)!=len(depth_dataset):
+          raise ValueError("Differing lengths in datasets.")
+        self.rgb = rgb_dataset
+        self.depth = depth_dataset
+        self.flag_rotate = flag_rotate
 
-        for i in range(len(dataset)):
-          image = dataset[i][0]
-          img = torchvision.utils.make_grid(image)
-          #print(img.shape)
+    def __getitem__(self, key):
+        # Combine (rgb_image, label) and (depth_image, label).
+        # @Returns: ( (rgb_image, depth_image), label )
+        rgb_tuple = self.rgb[key]
+        depth_tuple = self.depth[key]
+
+        if rgb_tuple[1]!=depth_tuple[1]:
+            raise ValueError("Differing labels for pictures with same key.")
+
+        rgb_image = rgb_tuple[0]
+        depth_image = depth_tuple[0]
+        label = rgb_tuple[1]
+        
+        if self.flag_rotate == True:
+          #rotate rgb image
+          img = torchvision.utils.make_grid(rgb_image)
           img = img.numpy().transpose((1, 2, 0))
-          #print(img.shape)
-          rotated, label = Make_rotation(img)
-          self.wrapper.append((torch.Tensor(rotated),label))
-        print('finish')
-          
-    
-    def __getitem__(self, index):
-        '''
-        __getitem__ should access an element through its index
-        Args:
-            index (int): Index
-        Returns:
-            tuple: (sample, target) where target is class_index of the target class.
-        '''
-        image, label = self.wrapper[index]
-                           # Provide a way to access image and label via index
-                           # Image is actually a tensor
-                           # label can be int
+          rotated, label1 = Make_rotation(img)
+          rgb_image = torch.Tensor(rotated)
+          # rotate depth image
+          img = torchvision.utils.make_grid(depth_image)
+          img = img.numpy().transpose((1, 2, 0))
+          rotated, label2 = Make_rotation(img)
+          depth_image = torch.Tensor(rotated)
+          #label
+          label = (label1 - label2) % 4 
 
-        return image, label   
-      
+        return ((rgb_image, depth_image), label)   
+
     def __len__(self):
-        '''
-        The __len__ method returns the length of the dataset
-        It is mandatory, as this is used by several other components
-        '''
-        length = len(self.wrapper) # Provide a way to get the length (number of elements) of the dataset
-        return length
+        return len(self.rgb)
