@@ -2,6 +2,7 @@ from torchvision.datasets import VisionDataset
 import numpy as np
 from random import randint
 import torch
+import torchvision
 
 '''
 The present class to bring together the rgb and depth images in a unique set (RGB_image, Depth_image) con label.
