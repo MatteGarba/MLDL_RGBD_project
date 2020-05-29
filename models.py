@@ -25,9 +25,11 @@ class PreText(nn.Module):
           nn.BatchNorm2d(100),
           nn.ReLU(inplace=True),
           nn.Flatten(),
+		  nn.Dropout(),
           nn.Linear(5*5*100, 100),
           nn.BatchNorm1d(100),
           nn.ReLU(inplace=True),
+		  nn.Dropout(),
           nn.Linear(100, num_classes),
           nn.Softmax(dim = 1),
       )
@@ -45,9 +47,11 @@ class  MainTask(nn.Module):
     self.layer = nn.Sequential(
           nn.AdaptiveAvgPool2d((7,7)),
           nn.Flatten(),
+		  nn.Dropout(),
           nn.Linear(featureMaps*2*7*7, 1000),
           nn.BatchNorm1d(1000),
           nn.ReLU(inplace=True),
+		  nn.Dropout(),
           nn.Linear(1000, num_classes),
           nn.Softmax(dim = 1),
         )
