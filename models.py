@@ -26,8 +26,10 @@ class PreText(nn.Module):
           nn.ReLU(inplace=True),
           nn.Flatten(),
           nn.Linear(5*5*100, 100),
-          nn.Softmax(dim = 1),
+          nn.BatchNorm1d(100),
+          nn.ReLU(inplace=True),
           nn.Linear(100, num_classes),
+          nn.Softmax(dim = 1),
       )
   def forward(self, h):
     c = self.layer(h)
