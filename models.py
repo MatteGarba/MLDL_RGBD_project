@@ -33,20 +33,20 @@ class PreText(nn.Module):
     c = self.layer(h)
     return c
 
-class  MainTask(nn.Module):
+class  MainTask2(nn.Module):
   """
   Main classifier
   """
   def __init__(self, num_classes = 51, featureMaps = 512, **kwargs):
-    super(MainTask, self).__init__()
+    super(MainTask2, self).__init__()
     self.layer = nn.Sequential(
           nn.AdaptiveAvgPool2d((7,7)),
           nn.Flatten(),
           nn.Linear(featureMaps*2*7*7, 1000),
-          nn.BatchNorm2d(1000),
+          nn.BatchNorm1d(1000),
           nn.ReLU(inplace=True),
           nn.Linear(1000, num_classes),
-          nn.Softmax(),
+          nn.Softmax(dim = 1),
         )
 
   def forward(self, h):
