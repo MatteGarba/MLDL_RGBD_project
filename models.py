@@ -14,7 +14,6 @@ The present python script contains the following classes:
 class PreText(nn.Module):
   """
   Pretext task
-
   """
   def __init__(self, num_classes = 4, featureMaps = 512, **kwargs):
     super(PreText, self).__init__()
@@ -25,20 +24,22 @@ class PreText(nn.Module):
           nn.Conv2d(100, 100, kernel_size = 3),
           nn.BatchNorm2d(100),
           nn.ReLU(inplace=True),
-          nn.Linear(100, 100),
-          nn.Softmax(100),
+          nn.Flatten(),
+          nn.Linear(5*5*100, 100),
+          nn.Softmax(dim = 1),
           nn.Linear(100, num_classes),
       )
   def forward(self, h):
     c = self.layer(h)
     return c
 
-class  MainTask2(nn.Module):
+
+class  MainTask(nn.Module):
   """
   Main classifier
   """
   def __init__(self, num_classes = 51, featureMaps = 512, **kwargs):
-    super(MainTask2, self).__init__()
+    super(MainTask, self).__init__()
     self.layer = nn.Sequential(
           nn.AdaptiveAvgPool2d((7,7)),
           nn.Flatten(),
