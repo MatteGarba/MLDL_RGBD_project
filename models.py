@@ -41,7 +41,8 @@ class  MainTask(nn.Module):
     super(MainTask, self).__init__()
     self.layer = nn.Sequential(
           nn.AdaptiveAvgPool2d((7,7)),
-          nn.Linear(featureMaps*2, 1000),
+          nn.Flatten(),
+          nn.Linear(featureMaps*2*7*7, 1000),
           nn.BatchNorm2d(1000),
           nn.ReLU(inplace=True),
           nn.Linear(1000, num_classes),
