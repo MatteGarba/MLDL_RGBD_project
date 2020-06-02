@@ -18,7 +18,7 @@ class PreText(nn.Module):
   def __init__(self, num_classes = 4, featureMaps = 512, **kwargs):
     super(PreText, self).__init__()
     self.layer = nn.Sequential(
-          nn.Conv2d(featureMaps*2, 100, kernel_size = 1),
+          nn.Conv2d(featureMaps*2, 100, kernel_size = 1, stride = 2),
           nn.BatchNorm2d(100),
           nn.ReLU(inplace=True),
           nn.Conv2d(100, 100, kernel_size = 3),
@@ -82,7 +82,7 @@ class Branch(nn.Module):
 
     def forward(self, x):
         """
-        x: input data. 4-dimensional tensor
+        x: input data. 4-dimensional tensor ( shape: 64x3x224x224   i.e. batch_size,num_channels,widht,height )
         @Returns: 4-dimensional tensor of size [len(x), 512, 7, 7]
         """
         # the residual part is implemented in the BasicBlock class that composes layers layer1..4
