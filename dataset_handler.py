@@ -1,3 +1,4 @@
+
 import sys, os
 from PIL import Image
 import numpy as np
@@ -108,13 +109,18 @@ class Dataset_handler():
             os.makedirs("dataset_rgb_synROD");
     if os.path.isdir("dataset_depth_synROD") == False:
             os.makedirs("dataset_depth_synROD");
+    
+    ignore_class = ['lime', 'onion', 'tomato', 'peach'] # those are the class to ignore
 
     # explore the unzipped synROD and copy the images in a correct structure
     base_path = "/content/dataset_unzipped/synROD/"
     folders = [dI for dI in os.listdir(base_path) if os.path.isdir(os.path.join(base_path,dI))] # list of all the folders (classes) of synROD
     for folder in folders:                                                                      # for each class/folder:
-      if folder == ".git":
+      if folder == ".git": 
         continue
+      if folder in ignore_class:
+        continue
+
       if os.path.isdir("dataset_rgb_synROD/"+str(folder)) == False:                             # create the two correponding in rgb and depth datasets
             os.makedirs("dataset_rgb_synROD/"+str(folder));
       if os.path.isdir("dataset_depth_synROD/"+str(folder)) == False:
@@ -143,6 +149,9 @@ class Dataset_handler():
     for folder in folders:                                                                      # for each class/folder:
       if folder == ".git":
         continue
+      if folder in ignore_class:
+        continue
+
       if os.path.isdir("dataset_rgb_ROD/"+str(folder)) == False:                                # create the corresponding folder in rgb rod dataset
             os.makedirs("dataset_rgb_ROD/"+str(folder));
 
@@ -167,6 +176,9 @@ class Dataset_handler():
     for folder in folders:                                                                      # for each class/folder:
       if folder == ".git":
         continue
+      if folder in ignore_class:
+        continue
+
       if os.path.isdir("dataset_depth_ROD/"+str(folder)) == False:                              # create the corresponding folder in depth rod dataset
             os.makedirs("dataset_depth_ROD/"+str(folder));
 
@@ -187,3 +199,4 @@ class Dataset_handler():
     
     return
   
+
