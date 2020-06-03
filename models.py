@@ -21,7 +21,7 @@ class PreText(nn.Module):
           nn.Conv2d(featureMaps*2, 100, kernel_size = 1, stride = 2),
           nn.BatchNorm2d(100),
           nn.ReLU(inplace=True),
-          nn.Conv2d(100, 100, kernel_size = 3),
+          nn.Conv2d(100, 100, kernel_size = 3, stride = 2),
           nn.BatchNorm2d(100),
           nn.ReLU(inplace=True),
           nn.Flatten(),
