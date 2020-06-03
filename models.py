@@ -26,7 +26,7 @@ class PreText(nn.Module):
           nn.ReLU(inplace=True),
           nn.Flatten(),
 	  nn.Dropout(),
-          nn.Linear(64, 100),
+          nn.Linear(100, 100),
           nn.BatchNorm1d(100),
           nn.ReLU(inplace=True),
 	  nn.Dropout(),
