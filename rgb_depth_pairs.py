@@ -26,13 +26,13 @@ class DualDataset(VisionDataset):
       """
       dual_transforms: object of DualCompose class.
       """
-        super(DualDataset, self).__init__(rgb_dataset)
-        if len(rgb_dataset)!=len(depth_dataset):
-          raise ValueError("Differing lengths in datasets.")
-        self.rgb = rgb_dataset
-        self.depth = depth_dataset
-        self.flag_rotate = flag_rotate
-        self.transforms = dual_transforms
+      super(DualDataset, self).__init__(rgb_dataset)
+      if len(rgb_dataset)!=len(depth_dataset):
+        raise ValueError("Differing lengths in datasets.")
+      self.rgb = rgb_dataset
+      self.depth = depth_dataset
+      self.flag_rotate = flag_rotate
+      self.transforms = dual_transforms
 
     def __getitem__(self, key):
         # Combine (rgb_image, label) and (depth_image, label).
@@ -164,22 +164,22 @@ class DualCompose(object):
   It applies the same transforms on both modality if is_dual==True.
   It considers them individually otherwise.
   """
-    def __init__(self, transforms):
-        self.transforms = transforms
+  def __init__(self, transforms):
+      self.transforms = transforms
 
-    def __call__(self, rgb, depth):
-        for t in self.transforms:
-            if t.is_dual==False:
-                rgb = t(rgb)
-                depth = t(depth)
-            else:
-                rgb, depth = t(rgb, depth)
-        return rgb, depth
+  def __call__(self, rgb, depth):
+      for t in self.transforms:
+          if t.is_dual==False:
+              rgb = t(rgb)
+              depth = t(depth)
+          else:
+              rgb, depth = t(rgb, depth)
+      return rgb, depth
 
-    def __repr__(self):
-        format_string = self.__class__.__name__ + '('
-        for t in self.transforms:
-            format_string += '\n'
-            format_string += '    {0}'.format(t)
-        format_string += '\n)'
-        return format_string
+  def __repr__(self):
+      format_string = self.__class__.__name__ + '('
+      for t in self.transforms:
+          format_string += '\n'
+          format_string += '    {0}'.format(t)
+      format_string += '\n)'
+      return format_string
