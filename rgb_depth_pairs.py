@@ -3,6 +3,9 @@ import numpy as np
 from random import randint
 import torch
 import torchvision
+import random
+import numbers
+import torchvision.transforms.functional as FF
 
 '''
 The present class to bring together the rgb and depth images in a unique set (RGB_image, Depth_image) con label.
@@ -19,13 +22,17 @@ def Make_rotation(image):
    return np.array(rotated).transpose((2, 1, 0)), val
 
 class DualDataset(VisionDataset):
-    def __init__(self, rgb_dataset, depth_dataset, flag_rotate = False):
+    def __init__(self, rgb_dataset, depth_dataset, flag_rotate = False, dual_transforms=None):
+      """
+      dual_transforms: object of DualCompose class.
+      """
         super(DualDataset, self).__init__(rgb_dataset)
         if len(rgb_dataset)!=len(depth_dataset):
           raise ValueError("Differing lengths in datasets.")
         self.rgb = rgb_dataset
         self.depth = depth_dataset
         self.flag_rotate = flag_rotate
+        self.transforms = dual_transforms
 
     def __getitem__(self, key):
         # Combine (rgb_image, label) and (depth_image, label).
@@ -39,7 +46,10 @@ class DualDataset(VisionDataset):
         rgb_image = rgb_tuple[0]
         depth_image = depth_tuple[0]
         label = rgb_tuple[1]
-        
+
+        if self.transforms is not None:
+            rgb_image, depth_image = self.transforms(rgb_image, depth_image)
+
         if self.flag_rotate == True:
           #rotate rgb image
           img = torchvision.utils.make_grid(rgb_image)
@@ -52,9 +62,124 @@ class DualDataset(VisionDataset):
           rotated, label2 = Make_rotation(img)
           depth_image = torch.Tensor(rotated)
           #label
-          label = (label1 - label2) % 4 
+          label = (label1 - label2) % 4
 
-        return ((rgb_image, depth_image), label)   
+        return ((rgb_image, depth_image), label)
 
     def __len__(self):
         return len(self.rgb)
+
+
+class DualRandomHFlip(object):
+    """This class applies the same random horizontal flip to both modalities of RGB-D.
+    Args:
+        p (float): probability of the image being flipped. Default value is 0.5
+    """
+    def __init__(self, p=0.5):
+        self.p = p
+    def __call__(self, rgb, depth):
+        if random.random() < self.p:
+            return FF.hflip(rgb), FF.hflip(depth)
+        return rgb, depth
+    def __repr__(self):
+        return self.__class__.__name__ + '(p={})'.format(self.p)
+
+
+def _get_image_size(img):
+      if FF._is_pil_image(img):
+          return img.size
+      elif isinstance(img, torch.Tensor) and img.dim() > 2:
+          return img.shape[-2:][::-1]
+      else:
+          raise TypeError("Unexpected type {}".format(type(img)))
+
+
+class DualRandomCrop(object):
+    """
+    This class applies the same random crop transformation to both modalities of RGB-D.
+    """
+    def __init__(self, size, padding=None, pad_if_needed=False, fill=0, padding_mode='constant'):
+        if isinstance(size, numbers.Number):
+            self.size = (int(size), int(size))
+        else:
+            self.size = size
+        self.padding = padding
+        self.pad_if_needed = pad_if_needed
+        self.fill = fill
+        self.padding_mode = padding_mode
+
+    @staticmethod
+    def get_params(img, output_size):
+        """Get parameters for ``crop`` for a random crop.
+        Args:
+            img (PIL Image): Image to be cropped.
+            output_size (tuple): Expected output size of the crop.
+        Returns:
+            tuple: params (i, j, h, w) to be passed to ``crop`` for random crop.
+        """
+        w, h = _get_image_size(img)
+        th, tw = output_size
+        if w == tw and h == th:
+            return 0, 0, h, w
+        i = random.randint(0, h - th)
+        j = random.randint(0, w - tw)
+        return i, j, th, tw
+
+    def __call__(self, rgb, depth):
+        """
+        rgb, depth (PIL Image): images to be cropped in the same way. The must have the same dimension!
+        """
+        if (rgb.size[0] != depth.size[0]) or (rgb.size[1] != depth.size[1]):
+            raise ValueError("Images have different sizes.")
+
+        if self.padding is not None:
+            rgb = FF.pad(rgb, self.padding, self.fill, self.padding_mode)
+            depth = FF.pad(depth, self.padding, self.fill, self.padding_mode)
+
+        # pad the width if needed
+        if self.pad_if_needed and rgb.size[0] < self.size[1]:
+            rgb = FF.pad(rgb, (self.size[1] - rgb.size[0], 0), self.fill, self.padding_mode)
+            depth = FF.pad(depth, (self.size[1] - depth.size[0], 0), self.fill, self.padding_mode)
+        # pad the height if needed
+        if self.pad_if_needed and rgb.size[1] < self.size[0]:
+            rgb = FF.pad(rgb, (0, self.size[0] - rgb.size[1]), self.fill, self.padding_mode)
+            depth = FF.pad(depth, (0, self.size[0] - depth.size[1]), self.fill, self.padding_mode)
+        i, j, h, w = self.get_params(rgb, self.size)
+        return FF.crop(rgb, i, j, h, w), FF.crop(depth, i, j, h, w)
+
+    def __repr__(self):
+        return self.__class__.__name__ + '(size={0}, padding={1})'.format(self.size, self.padding)
+
+
+def dual(obj, is_dual=False):
+  """
+  This function adds an attribute to transforms, to be used by DualCompose.
+  """
+  obj.is_dual = is_dual
+  return obj
+
+class DualCompose(object):
+  """
+  This class is a wrapper for transforms to be applied on dual modality images.
+  It applies the same transforms on both modality if is_dual==True.
+  It considers them individually otherwise.
+  """
+    def __init__(self, transforms):
+        self.transforms = transforms
+
+    def __call__(self, rgb, depth):
+        for t in self.transforms:
+            if t.is_dual==False:
+                rgb = t(rgb)
+                depth = t(depth)
+            else:
+                rgb, depth = t(rgb, depth)
+        return rgb, depth
+
+    def __repr__(self):
+        format_string = self.__class__.__name__ + '('
+        for t in self.transforms:
+            format_string += '\n'
+            format_string += '    {0}'.format(t)
+        format_string += '\n)'
+        return format_string
