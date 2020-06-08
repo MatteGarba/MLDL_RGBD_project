@@ -18,7 +18,7 @@ class PreText(nn.Module):
   def __init__(self, num_classes = 4, featureMaps = 512, **kwargs):
     super(PreText, self).__init__()
     self.layer = nn.Sequential(
-          nn.Conv2d(featureMaps*2, 100, kernel_size = 1, stride = 2),
+          nn.Conv2d(featureMaps*2, 100, kernel_size = 1, stride = 1),
           nn.BatchNorm2d(100),
           nn.ReLU(inplace=True),
           nn.Conv2d(100, 100, kernel_size = 3, stride = 2),
@@ -26,7 +26,7 @@ class PreText(nn.Module):
           nn.ReLU(inplace=True),
           nn.Flatten(),
 	  nn.Dropout(),
-          nn.Linear(100, 100),
+          nn.Linear(100*3*3, 100),
           nn.BatchNorm1d(100),
           nn.ReLU(inplace=True),
 	  nn.Dropout(),
