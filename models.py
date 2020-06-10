@@ -25,7 +25,6 @@ class PreText(nn.Module):
           nn.BatchNorm2d(100),
           nn.ReLU(inplace=True),
           nn.Flatten(),
-	  nn.Dropout(),
           nn.Linear(100*3*3, 100),
           nn.BatchNorm1d(100),
           nn.ReLU(inplace=True),
@@ -44,10 +43,9 @@ class  MainTask(nn.Module):
   def __init__(self, num_classes = 47, featureMaps = 512, **kwargs):
     super(MainTask, self).__init__()
     self.layer = nn.Sequential(
-          nn.AdaptiveAvgPool2d((7,7)),
+          nn.AdaptiveAvgPool2d((1,1)),
           nn.Flatten(),
-	  nn.Dropout(),
-          nn.Linear(featureMaps*2*7*7, 1000),
+          nn.Linear(featureMaps*2*1*1, 1000),
           nn.BatchNorm1d(1000),
           nn.ReLU(inplace=True),
 	  nn.Dropout(),
