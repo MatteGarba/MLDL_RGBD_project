@@ -19,7 +19,7 @@ def permute(img, code):
   # All the permutations (just for reference)
   # permutations = {1:'RGB', 2:'GRB', 3:'BRG', 4:'RBG', 5:'GBR', 6:'BGR'}
 
-  r, g, b = Image.Image.split(img)
+  r, g, b = img.split()
 
   if code == 1:
     img = Image.merge("RGB", (r,g,b))   # 1:'RGB'
