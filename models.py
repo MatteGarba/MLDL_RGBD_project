@@ -57,6 +57,30 @@ class  MainTask(nn.Module):
      return d
 
 
+class PreText_02(nn.Module):
+  """
+  Pretext task 02 used for the color permutation
+  """
+  def __init__(self, num_classes = 2, featureMaps = 512, **kwargs):
+    super(PreText_02, self).__init__()
+    self.layer = nn.Sequential(
+          nn.Conv2d(featureMaps*2, 100, kernel_size = 1, stride = 1),
+          nn.BatchNorm2d(100),
+          nn.ReLU(inplace=True),
+          nn.Conv2d(100, 100, kernel_size = 3, stride = 2),
+          nn.BatchNorm2d(100),
+          nn.ReLU(inplace=True),
+          nn.Flatten(),
+          nn.Linear(100*3*3, 100),
+          nn.BatchNorm1d(100),
+          nn.ReLU(inplace=True),
+	  nn.Dropout(),
+          nn.Linear(100, num_classes),
+      )
+  def forward(self, h):
+    c = self.layer(h)
+    return c
+
 
 class Branch(nn.Module):
     """
