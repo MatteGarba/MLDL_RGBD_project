@@ -6,6 +6,7 @@ import torchvision
 import random
 import numbers
 import torchvision.transforms.functional as FF
+from PIL import Image
 
 '''
 The present class to bring together the rgb and depth images in a unique set (RGB_image, Depth_image) con label.
