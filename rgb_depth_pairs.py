@@ -14,6 +14,58 @@ They can be o no rotated depending on the value of the flag "flag_rotate".
 * Otherwise, they are not rotated and the label identifies the class of the object in the images (which is the same for  both the modalities)
 
 '''
+def permute(img, code):
+  
+  # All the permutations (just for reference)
+  # permutations = {1:'RGB', 2:'GRB', 3:'BRG', 4:'RBG', 5:'GBR', 6:'BGR'}
+
+  r, g, b = Image.Image.split(img)
+
+  if code == 1:
+    img = Image.merge("RGB", (r,g,b))   # 1:'RGB'
+  elif code == 2:
+    img = Image.merge("RGB", (g,r,b))   # 2:'GRB'
+  elif code == 3:
+    img = Image.merge("RGB", (b,r,g))   # 3:'BRG'
+  elif code == 4:
+    img = Image.merge("RGB", (r,b,g))   # 4:'RBG'
+  elif code == 5:
+    img = Image.merge("RGB", (g,b,r))   # 5:'GBR'
+  elif code == 6:
+    img = Image.merge("RGB", (b,g,r))   # 6:'BGR'
+  else:
+    print("WARNING: this must not happen!!!")
+    img = img
+  
+  return img
+
+def make_permutation(rgb_im, depth_im):
+
+  # we want the image to ha 50% chance to undergo the same transformation
+  # otherwise the two classes would be unbalanced
+  discriminator = randint(1,10)
+  if discriminator % 2 == 1:
+    # if odd, they will undergo the same permutation
+    choice = randint(1, 6)
+    choice_rgb = choice
+    choice_depth = choice
+  else:
+    # if even, they will undergo different permutations
+    choice_rgb = randint(1,6)
+    choice_depth = randint(1,6)
+    while choice_rgb == choice_depth:
+      choice_depth = randint(1,6)
+
+  rgb_im = permute(rgb_im, choice_rgb)
+  depth_im = permute(depth_im, choice_depth)
+
+  # label assignment
+  label = 0                           # different permutation undergone
+  if choice_rgb == choice_depth:      
+    label = 1                         # same permutation undergone
+
+  return rgb_im, depth_im, label
+
 def Make_rotation(image):
    val = randint(0, 3)
 
@@ -22,7 +74,7 @@ def Make_rotation(image):
    return np.array(rotated).transpose((2, 1, 0)), val
 
 class DualDataset(VisionDataset):
-    def __init__(self, rgb_dataset, depth_dataset, flag_rotate = False, dual_transforms=None):
+    def __init__(self, rgb_dataset, depth_dataset, flag_rotate=False, dual_transforms=None, flag_permute=False):
       """
       dual_transforms: object of DualCompose class.
       """
@@ -33,6 +85,7 @@ class DualDataset(VisionDataset):
       self.depth = depth_dataset
       self.flag_rotate = flag_rotate
       self.transforms = dual_transforms
+      self.flag_permute = flag_permute
 
     def __getitem__(self, key):
         # Combine (rgb_image, label) and (depth_image, label).
@@ -63,6 +116,8 @@ class DualDataset(VisionDataset):
           depth_image = torch.Tensor(rotated)
           #label
           label = (label1 - label2) % 4
+        elif self.flag_permute == True:
+          rgb_image, depth_image, label = make_permutation(rgb_image, depth_image)
 
         return ((rgb_image, depth_image), label)
 
