@@ -20,7 +20,7 @@ def permute(img, code):
   # All the permutations (just for reference)
   # permutations = {1:'RGB', 2:'GRB', 3:'BRG', 4:'RBG', 5:'GBR', 6:'BGR'}
 
-  r, g, b = img.split()
+  r, g, b = Image.Image.split(img)
 
   if code == 1:
     img = Image.merge("RGB", (r,g,b))   # 1:'RGB'
@@ -101,6 +101,9 @@ class DualDataset(VisionDataset):
         depth_image = depth_tuple[0]
         label = rgb_tuple[1]
 
+        if self.flag_permute == True:
+          rgb_image, depth_image, label = make_permutation(rgb_image, depth_image)
+
         if self.transforms is not None:
             rgb_image, depth_image = self.transforms(rgb_image, depth_image)
 
@@ -117,8 +120,6 @@ class DualDataset(VisionDataset):
           depth_image = torch.Tensor(rotated)
           #label
           label = (label1 - label2) % 4
-        elif self.flag_permute == True:
-          rgb_image, depth_image, label = make_permutation(rgb_image, depth_image)
 
         return ((rgb_image, depth_image), label)
 
