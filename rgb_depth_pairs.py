@@ -40,32 +40,48 @@ def permute(img, code):
   
   return img
 
-def make_permutation(rgb_im, depth_im):
+def make_permutation(rgb_im, depth_im, second_variation=False):
+  # This method can be used in two ways:
+  # 1. --> if the flag is False: the two images have a 50% chance to undergo
+  #        the same transformation. 
+  #        The label is 0 if it's the same and 1 otherwise and the task will
+  #        have to uderstand if they underwent the same permutation.
+  # 2. --> if the flag is True: the two images undergo the same transformation.
+  #        The pretext task must understand which of the 6 possible permutations
+  #        was applied
 
-  # we want the image to ha 50% chance to undergo the same transformation
-  # otherwise the two classes would be unbalanced
-  discriminator = randint(1,10)
-  if discriminator % 2 == 1:
-    # if odd, they will undergo the same permutation
-    choice = randint(1, 6)
-    choice_rgb = choice
-    choice_depth = choice
-  else:
-    # if even, they will undergo different permutations
-    choice_rgb = randint(1,6)
-    choice_depth = randint(1,6)
-    while choice_rgb == choice_depth:
+  if second_variation == False:
+    # we want the image to ha 50% chance to undergo the same transformation
+    # otherwise the two classes would be unbalanced
+    discriminator = randint(1,10)
+    if discriminator % 2 == 1:
+      # if odd, they will undergo the same permutation
+      choice = randint(1, 6)
+      choice_rgb = choice
+      choice_depth = choice
+    else:
+      # if even, they will undergo different permutations
+      choice_rgb = randint(1,6)
       choice_depth = randint(1,6)
+      while choice_rgb == choice_depth:
+        choice_depth = randint(1,6)
 
-  rgb_im = permute(rgb_im, choice_rgb)
-  depth_im = permute(depth_im, choice_depth)
+    rgb_im = permute(rgb_im, choice_rgb)
+    depth_im = permute(depth_im, choice_depth)
 
-  # label assignment
-  label = 0                           # different permutation undergone
-  if choice_rgb == choice_depth:      
-    label = 1                         # same permutation undergone
+    # label assignment
+    label = 0                           # different permutation undergone
+    if choice_rgb == choice_depth:      
+      label = 1                         # same permutation undergone
+
+  else:
+    choice = randint(1, 6)
+    rgb_im = permute(rgb_im, choice)
+    depth_im = permute(depth_im, choice)
+    label = choice-1                    # labels will go from 0 to 5
 
   return rgb_im, depth_im, label
+
 
 def Make_rotation(image):
    val = randint(0, 3)
@@ -75,7 +91,7 @@ def Make_rotation(image):
    return np.array(rotated).transpose((2, 1, 0)), val
 
 class DualDataset(VisionDataset):
-    def __init__(self, rgb_dataset, depth_dataset, flag_rotate=False, dual_transforms=None, flag_permute=False):
+    def __init__(self, rgb_dataset, depth_dataset, flag_rotate=False, dual_transforms=None, flag_permute=False, variation2=False):
       """
       dual_transforms: object of DualCompose class.
       """
@@ -102,7 +118,7 @@ class DualDataset(VisionDataset):
         label = rgb_tuple[1]
 
         if self.flag_permute == True:
-          rgb_image, depth_image, label = make_permutation(rgb_image, depth_image)
+          rgb_image, depth_image, label = make_permutation(rgb_image, depth_image, variation2)
 
         if self.transforms is not None:
             rgb_image, depth_image = self.transforms(rgb_image, depth_image)
