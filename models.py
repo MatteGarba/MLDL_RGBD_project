@@ -57,11 +57,11 @@ class  MainTask(nn.Module):
      return d
 
 
-class PreText_02(nn.Module):
+class PreText_variation(nn.Module):
   """
   Pretext task 02 used for the color permutation
   """
-  def __init__(self, num_classes = 2, featureMaps = 512, **kwargs):
+  def __init__(self, num_classes = 1, featureMaps = 512, **kwargs):
     super(PreText_02, self).__init__()
     self.layer = nn.Sequential(
           nn.Conv2d(featureMaps*2, 100, kernel_size = 1, stride = 1),
