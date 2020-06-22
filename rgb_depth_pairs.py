@@ -103,6 +103,7 @@ class DualDataset(VisionDataset):
       self.flag_rotate = flag_rotate
       self.transforms = dual_transforms
       self.flag_permute = flag_permute
+      self.variation2 = variation2
 
     def __getitem__(self, key):
         # Combine (rgb_image, label) and (depth_image, label).
@@ -118,7 +119,7 @@ class DualDataset(VisionDataset):
         label = rgb_tuple[1]
 
         if self.flag_permute == True:
-          rgb_image, depth_image, label = make_permutation(rgb_image, depth_image, variation2)
+          rgb_image, depth_image, label = make_permutation(rgb_image, depth_image, self.variation2)
 
         if self.transforms is not None:
             rgb_image, depth_image = self.transforms(rgb_image, depth_image)
