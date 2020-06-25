@@ -142,28 +142,29 @@ class DualDataset(VisionDataset):
         return ((rgb_image, depth_image), label)
       
       
-    def sample_images(self, stratification, n_samples=100):
+    def sample_images(dataset, stratification, n_samples=100):
       """
         This function samples the given dataset in parallel on the two modalities. It is used in conjunction with t-SNE. Due to COLAB limitations and the nature of the algorithm,
         requiring high values of n_samples is not feasible. 
         It returns two lists of samples, one for each modality.
       """
       # Consistency check
-      if len(self) < n_samples:
+      if len(dataset) < n_samples:
         raise ValueError("Cannot provide this many samples.")
       if n_samples > 250:
         raise RuntimeWarning("This value of samples is high and may cause CUDA out memory errors.")
         
       # Find the classes and compute number of samples per class
-      classes = self.rgb.targets
-      n_classes = len(self.rgb.classes)
+      classes = np.array(dataset.rgb.targets)
+      n_classes = len(np.unique(classes))
       if n_samples < n_classes:
         raise ValueError("This method enforces to have at least 1 sample per class. Use higher values for n_samples.")
-      stratification = np.rint(stratification * n_samples)
+      stratification = np.rint(np.array(stratification) * n_samples)
       # Add extra samples for missing classes
-      stratification[ stratification==0 ] += 1
+      mask = (stratification==0)
+      stratification[ mask ] += 1
       
-      assert(np.max(classes) == len(stratification) and len(stratification)==n_classes)
+      assert(np.max(classes)+1 == n_classes)
       rgb_samples = []
       depth_samples = []
       ids = np.array([i for i in range(len(classes))])
@@ -178,13 +179,13 @@ class DualDataset(VisionDataset):
             count -= 1
           # Take the correspondent samples and put them in the return lists
           for idx in samples_ids:
-            (rgb, depth), _ = self[idx]
+            (rgb, depth), _ = dataset[idx]
             rgb_samples.append(rgb)
             depth_samples.append(depth)
       return rgb_samples, depth_samples
     
     
-    def get_stratification():
+    def get_stratification(self):
       """
         Returns a list with one element for each class, that represents the percentage of elements of that class in the whole dataset.
       """
@@ -192,6 +193,7 @@ class DualDataset(VisionDataset):
         return self.stratification
       classes = self.rgb.targets
       return [(classes==c).sum()/len(classes) for c in np.unique(classes)]
+
 
 
     def __len__(self):
