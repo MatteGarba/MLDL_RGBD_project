@@ -57,8 +57,8 @@ class FeatureVisualization():
 
   def show_images(self, rgb, depth, saliency_rgb, saliency_depth):
     fig, ax = plt.subplots(2,2, figsize=(18,15))
-    ax[0,0].imshow(deprocess(rgb.detach().cpu()))
-    ax[0,1].imshow(deprocess(depth.detach().cpu()))
+    ax[0,0].imshow(self.deprocess(rgb.detach().cpu()))
+    ax[0,1].imshow(self.deprocess(depth.detach().cpu()))
     ax[1,0].imshow((saliency_rgb.cpu()))
     ax[1,1].imshow(saliency_depth.cpu())
 
