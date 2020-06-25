@@ -139,7 +139,38 @@ class DualDataset(VisionDataset):
           label = (label1 - label2) % 4
 
         return ((rgb_image, depth_image), label)
+      
+      
+    def sample_images(self, n_samples=1):
+      """
+        This function samples the given dataset in parallel on the two modalities. It is used in conjunction with t-SNE. Due to COLAB limitations and the nature of the algorithm,
+        requiring high values of n_samples is not feasible. 
+      """
+      # Consistency check
+      if len(self) < n_samples:
+        raise ValueError("Cannot provide this many samples.")
+      if n_samples > 250:
+        raise RuntimeWarning("This value of samples is high and may cause CUDA out memory errors.")
+        
+      # Find the indexes of the required images
+      indexes = set()
+      for i in range(n_samples):
+        j = randint(0, len(self)-1)
+        while j in indexes:
+          j = randint(0, len(self)-1)
+        indexes.add(j)
 
+      # Build the lists to be returned
+      rgb_samples = []
+      depth_samples = []
+      for i in indexes:
+        (rgb_tensor, d_tensor), _ = self[i]
+        rgb_samples.append(rgb_tensor)
+        depth_samples.append(d_tensor)
+
+      return rgb_samples, depth_samples 
+
+    
     def __len__(self):
         return len(self.rgb)
 
