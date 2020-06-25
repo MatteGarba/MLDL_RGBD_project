@@ -104,6 +104,7 @@ class DualDataset(VisionDataset):
       self.transforms = dual_transforms
       self.flag_permute = flag_permute
       self.variation2 = variation2
+      self.stratification = None
 
     def __getitem__(self, key):
         # Combine (rgb_image, label) and (depth_image, label).
@@ -141,10 +142,11 @@ class DualDataset(VisionDataset):
         return ((rgb_image, depth_image), label)
       
       
-    def sample_images(self, n_samples=1):
+    def sample_images(self, stratification, n_samples=100):
       """
         This function samples the given dataset in parallel on the two modalities. It is used in conjunction with t-SNE. Due to COLAB limitations and the nature of the algorithm,
         requiring high values of n_samples is not feasible. 
+        It returns two lists of samples, one for each modality.
       """
       # Consistency check
       if len(self) < n_samples:
@@ -152,29 +154,50 @@ class DualDataset(VisionDataset):
       if n_samples > 250:
         raise RuntimeWarning("This value of samples is high and may cause CUDA out memory errors.")
         
-      # Find the indexes of the required images
-      indexes = set()
-      for i in range(n_samples):
-        j = randint(0, len(self)-1)
-        while j in indexes:
-          j = randint(0, len(self)-1)
-        indexes.add(j)
-
-      # Build the lists to be returned
+      # Find the classes and compute number of samples per class
+      classes = self.rgb.targets
+      n_classes = len(self.rgb.classes)
+      if n_samples < n_classes:
+        raise ValueError("This method enforces to have at least 1 sample per class. Use higher values for n_samples.")
+      stratification = np.rint(stratification * n_samples)
+      # Add extra samples for missing classes
+      stratification[ stratification==0 ] += 1
+      
+      assert(np.max(classes) == len(stratification) and len(stratification)==n_classes)
       rgb_samples = []
       depth_samples = []
-      for i in indexes:
-        (rgb_tensor, d_tensor), _ = self[i]
-        rgb_samples.append(rgb_tensor)
-        depth_samples.append(d_tensor)
-
-      return rgb_samples, depth_samples 
-
+      ids = np.array([i for i in range(len(classes))])
+      for clss, count in enumerate(stratification):
+          this_class_ids = ids[classes == clss]
+          samples_ids = set()
+          while count>0:
+            idx = randint(0, len(this_class_ids)-1)
+            while(idx in samples_ids):
+              idx = randint(0, len(this_class_ids)-1)
+            samples_ids.add(idx)
+            count -= 1
+          # Take the correspondent samples and put them in the return lists
+          for idx in samples_ids:
+            (rgb, depth), _ = self[idx]
+            rgb_samples.append(rgb)
+            depth_samples.append(depth)
+      return rgb_samples, depth_samples
     
+    
+    def get_stratification():
+      """
+        Returns a list with one element for each class, that represents the percentage of elements of that class in the whole dataset.
+      """
+      if self.stratification is not None:
+        return self.stratification
+      classes = self.rgb.targets
+      return [(classes==c).sum()/len(classes) for c in np.unique(classes)]
+
+
     def __len__(self):
         return len(self.rgb)
 
-
+      
 class DualRandomHFlip(object):
     """This class applies the same random horizontal flip to both modalities of RGB-D.
     Args:
